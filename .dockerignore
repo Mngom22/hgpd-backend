@@ -1,0 +1,24 @@
+# Dockerfile ignores for backend
+
+.git
+.gitignore
+.env
+.env.*.local
+node_modules
+dist
+build
+coverage
+.DS_Store
+*.log
+logs/
+uploads/
+.vscode
+.idea
+test
+e2e
+.env.development
+.env.test
+.env.staging
+npm-debug.log
+yarn-error.log
+.eslintcache

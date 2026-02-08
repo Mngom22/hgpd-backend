@@ -43,7 +43,7 @@ export class Provider {
   activity: string;
 
   // Description courte
-  @Column({ type: 'text', nullable: true })
+  @Column({ name: 'short_description', type: 'text', nullable: true })
   shortDescription: string;
 
   // Localisation

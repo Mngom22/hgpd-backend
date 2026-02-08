@@ -10,12 +10,14 @@ import { Provider } from '../../providers/entities/provider.entity';
 import { ProviderCategory } from '../../providers/entities/provider-category.entity';
 import { ProviderStats } from '../../providers/entities/provider-stats.entity';
 import { Organizer } from '../../organizers/entities/organizer.entity';
+import { LegalDocument, LegalDocumentType } from '../../legal/entities/legal-document.entity';
 
 // Data
 import { categoriesData } from './data/categories.data';
 import { usersData } from './data/users.data';
 import { generateProviders } from './data/providers.data';
 import { generateOrganizers } from './data/organizers.data';
+import { legalTermsData } from './data/legal-terms.data';
 
 @Injectable()
 export class SeederService {
@@ -37,14 +39,15 @@ export class SeederService {
     private readonly providerStatsRepository: Repository<ProviderStats>,
     @InjectRepository(Organizer)
     private readonly organizerRepository: Repository<Organizer>,
+    @InjectRepository(LegalDocument)
+    private readonly legalDocumentRepository: Repository<LegalDocument>,
   ) {}
 
   async seed(): Promise<void> {
     this.logger.log('Starting database seeding...');
 
     try {
-      // LegalTerms seeding commented out as entity doesn't exist yet
-      // await this.seedLegalTerms();
+      await this.seedLegalTerms();
       await this.seedUsers();
       await this.seedCategories();
       await this.seedProviders();
@@ -143,6 +146,32 @@ export class SeederService {
     }
 
     this.logger.log(`Seeded ${usersData.length} users`);
+  }
+
+  private async seedLegalTerms(): Promise<void> {
+    this.logger.log('Seeding legal documents...');
+
+    const existingCount = await this.legalDocumentRepository.count();
+    if (existingCount > 0) {
+      this.logger.log(
+        `Legal documents already seeded (${existingCount} found). Skipping...`,
+      );
+      return;
+    }
+
+    for (const termData of legalTermsData) {
+      const legalDoc = this.legalDocumentRepository.create({
+        type: termData.type as LegalDocumentType,
+        title: `${termData.type} - Version ${termData.version}`,
+        content: termData.content,
+        version: termData.version,
+        isActive: termData.active,
+        publishedAt: new Date(),
+      });
+      await this.legalDocumentRepository.save(legalDoc);
+    }
+
+    this.logger.log(`Seeded ${legalTermsData.length} legal documents`);
   }
 
   private async seedCategories(): Promise<void> {

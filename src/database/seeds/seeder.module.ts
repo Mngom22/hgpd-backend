@@ -11,6 +11,7 @@ import { Provider } from '../../providers/entities/provider.entity';
 import { ProviderCategory } from '../../providers/entities/provider-category.entity';
 import { ProviderStats } from '../../providers/entities/provider-stats.entity';
 import { Organizer } from '../../organizers/entities/organizer.entity';
+import { LegalDocument } from '../../legal/entities/legal-document.entity';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { Organizer } from '../../organizers/entities/organizer.entity';
       ProviderCategory,
       ProviderStats,
       Organizer,
+      LegalDocument,
     ]),
   ],
   providers: [SeederService],

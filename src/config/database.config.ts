@@ -12,7 +12,7 @@ export default registerAs(
     database: process.env.DB_DATABASE || 'hgpd_dev',
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
     synchronize:
-      process.env.NODE_ENV === 'development' || process.env.DB_SYNC === 'true',
+      process.env.NODE_ENV === 'development' || process.env.DB_SYNC === 'true' || process.env.DB_INIT === 'true',
     // logging: process.env.NODE_ENV === 'development',
     migrations: [__dirname + '/../database/migrations/*{.ts,.js}'],
     migrationsRun: false,

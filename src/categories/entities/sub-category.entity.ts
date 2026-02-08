@@ -31,10 +31,10 @@ export class SubCategory {
   @Column({ name: 'display_order', type: 'int', default: 0 })
   displayOrder: number;
 
-  @Column({ type: 'boolean', default: false })
+  @Column({ name: 'is_default', type: 'boolean', default: false })
   isDefault: boolean;
 
-  @Column({ type: 'boolean', default: true })
+  @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
