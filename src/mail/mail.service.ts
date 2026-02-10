@@ -362,6 +362,38 @@ export class MailService {
     }
   }
 
+  // ==================== CONTACT ====================
+
+  async sendContactMessage(data: {
+    fullName: string;
+    email: string;
+    subject: string;
+    message: string;
+  }): Promise<void> {
+    try {
+      await this.mailerService.sendMail({
+        to: this.adminEmail,
+        replyTo: data.email,
+        subject: `[Contact HGPD] ${data.subject}`,
+        template: 'contact-message',
+        context: {
+          fullName: data.fullName,
+          email: data.email,
+          subject: data.subject,
+          message: data.message,
+          year: new Date().getFullYear(),
+        },
+      });
+
+      this.logger.log(`Contact message from ${data.email} forwarded to admin`);
+    } catch (error) {
+      this.logger.error(
+        `Failed to send contact message from ${data.email}: ${error.message}`,
+      );
+      throw error;
+    }
+  }
+
   // ==================== HELPERS ====================
 
   private formatDate(date: Date): string {

@@ -6,6 +6,6 @@ export default registerAs('email', () => ({
   user: process.env.EMAIL_USER,
   password: process.env.EMAIL_PASSWORD,
   from: process.env.EMAIL_FROM || 'HGPD <s.balde@hgpd.fr>',
-  adminEmail: process.env.ADMIN_EMAIL || 'a@hgpd.com',
+  adminEmail: process.env.ADMIN_EMAIL || 's.balde@hgpd.fr',
   platformUrl: process.env.PLATFORM_URL || 'https://hgpd.com',
 }));
