@@ -10,6 +10,7 @@ import { Provider } from './entities/provider.entity';
 import { ProviderPhoto } from './entities/provider-photo.entity';
 import { ProviderVideo } from './entities/provider-video.entity';
 import { ProviderCategory } from './entities/provider-category.entity';
+import { ProviderCategoryPhoto } from './entities/provider-category-photo.entity';
 import { ProviderStats } from './entities/provider-stats.entity';
 import {
   CreateProviderDto,
@@ -17,6 +18,7 @@ import {
   CreateProviderPhotoDto,
   CreateProviderVideoDto,
   AddProviderCategoryDto,
+  UpdateProviderCategoryDto,
 } from './dto';
 
 @Injectable()
@@ -30,9 +32,11 @@ export class ProvidersService {
     private readonly videoRepository: Repository<ProviderVideo>,
     @InjectRepository(ProviderCategory)
     private readonly providerCategoryRepository: Repository<ProviderCategory>,
+    @InjectRepository(ProviderCategoryPhoto)
+    private readonly categoryPhotoRepository: Repository<ProviderCategoryPhoto>,
     @InjectRepository(ProviderStats)
     private readonly statsRepository: Repository<ProviderStats>,
-  ) {}
+  ) { }
 
   // Provider CRUD
   async create(dto: CreateProviderDto): Promise<Provider> {
@@ -118,6 +122,7 @@ export class ProvidersService {
         'providerCategories',
         'providerCategories.category',
         'providerCategories.subCategory',
+        'providerCategories.photos',
         'stats',
       ],
     });
@@ -237,6 +242,74 @@ export class ProvidersService {
       throw new NotFoundException(`Provider category not found`);
     }
     await this.providerCategoryRepository.remove(pc);
+  }
+
+  async updateCategory(
+    providerId: string,
+    pcId: number,
+    dto: UpdateProviderCategoryDto,
+  ): Promise<ProviderCategory> {
+    const pc = await this.providerCategoryRepository.findOne({
+      where: { id: pcId, providerId },
+    });
+    if (!pc) {
+      throw new NotFoundException(`Provider category not found`);
+    }
+    Object.assign(pc, dto);
+    return this.providerCategoryRepository.save(pc);
+  }
+
+  async addCategoryPhoto(
+    providerId: string,
+    pcId: number,
+    dto: CreateProviderPhotoDto,
+  ): Promise<ProviderCategoryPhoto> {
+    // Vérifier que la catégorie existe et appartient au prestataire
+    const pc = await this.providerCategoryRepository.findOne({
+      where: { id: pcId, providerId },
+    });
+    if (!pc) {
+      throw new NotFoundException(`Provider category not found`);
+    }
+
+    // Vérifier la limite de 5 photos par catégorie
+    const photoCount = await this.categoryPhotoRepository.count({
+      where: { providerCategoryId: pcId },
+    });
+    if (photoCount >= 5) {
+      throw new ConflictException('Maximum 5 photos per category');
+    }
+
+    const photo = this.categoryPhotoRepository.create({
+      providerCategoryId: pcId,
+      url: dto.url,
+      displayOrder: dto.displayOrder || 0,
+    });
+    return this.categoryPhotoRepository.save(photo);
+  }
+
+  async removeCategoryPhoto(
+    providerId: string,
+    pcId: number,
+    photoId: string,
+  ): Promise<void> {
+    // Vérifier que la catégorie existe et appartient au prestataire
+    const pc = await this.providerCategoryRepository.findOne({
+      where: { id: pcId, providerId },
+    });
+    if (!pc) {
+      throw new NotFoundException(`Provider category not found`);
+    }
+
+    // Trouver et supprimer la photo
+    const photo = await this.categoryPhotoRepository.findOne({
+      where: { id: photoId, providerCategoryId: pcId },
+    });
+    if (!photo) {
+      throw new NotFoundException('Photo not found');
+    }
+
+    await this.categoryPhotoRepository.remove(photo);
   }
 
   // Stats

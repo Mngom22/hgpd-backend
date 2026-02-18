@@ -23,9 +23,17 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
         // Si l'utilisateur est un admin, on peut le rejoindre dans une room spécifique
         const userRole = client.handshake.query.role;
+        const userId = client.handshake.query.userId;
+        
         if (userRole === 'admin') {
             client.join('admin');
             this.logger.log(`Admin joined room: ${client.id}`);
+        }
+        
+        // Providers peuvent rejoindre une room spécifique
+        if (userRole === 'provider' && userId) {
+            client.join(`provider_${userId}`);
+            this.logger.log(`Provider ${userId} joined room: ${client.id}`);
         }
     }
 
@@ -43,5 +51,9 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     emitToUser(userId: string, event: string, payload: any) {
         this.server.to(userId).emit(event, payload);
+    }
+
+    emitToProvider(providerId: string, event: string, payload: any) {
+        this.server.to(`provider_${providerId}`).emit(event, payload);
     }
 }

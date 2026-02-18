@@ -35,6 +35,9 @@ export class DemandProvider {
   @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
   budget: number;
 
+  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
+  leadPrice: number;
+
   // Statut spécifique
   @Column({
     type: 'enum',
@@ -72,6 +75,14 @@ export class DemandProvider {
 
   @Column({ name: 'payment_id', type: 'uuid', nullable: true })
   paymentId: string;
+
+  // Admin approval
+  @Column({
+    name: 'admin_approved_at',
+    type: 'timestamp with time zone',
+    nullable: true,
+  })
+  adminApprovedAt: Date;
 
   // Timestamps
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })

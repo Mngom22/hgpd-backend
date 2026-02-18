@@ -39,7 +39,7 @@ export class AdminController {
     private readonly demandsService: DemandsService,
     private readonly reviewsService: ReviewsService,
     private readonly legalService: LegalService,
-  ) {}
+  ) { }
 
   @Get('stats')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -89,6 +89,14 @@ export class AdminController {
   @ApiOperation({ summary: 'Get all demands for a provider' })
   async getProviderDemands(@Param('id', ParseUUIDPipe) id: string) {
     return this.demandsService.findDemandsByProvider(id);
+  }
+
+  @Get('demands/all-providers')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
+  @ApiOperation({ summary: 'Get all demand-provider entries for admin' })
+  async getAllDemandProviders() {
+    return this.demandsService.findAllDemandProviders();
   }
 
   @Get('providers/:id/reviews')
@@ -256,5 +264,16 @@ export class AdminController {
     @Param('providerId', ParseUUIDPipe) providerId: string,
   ) {
     return this.legalService.findAcceptancesByProvider(providerId);
+  }
+
+  @Patch('demands/:demandId/providers/:providerId/approve')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
+  @ApiOperation({ summary: 'Approve a demand for a provider and send notification' })
+  async approveDemandForProvider(
+    @Param('demandId', ParseUUIDPipe) demandId: string,
+    @Param('providerId', ParseUUIDPipe) providerId: string,
+  ) {
+    return this.demandsService.approveDemandForProvider(demandId, providerId);
   }
 }

@@ -22,6 +22,7 @@ import {
   CreateProviderPhotoDto,
   CreateProviderVideoDto,
   AddProviderCategoryDto,
+  UpdateProviderCategoryDto,
 } from './dto';
 import { ApiOperation, ApiQuery } from '@nestjs/swagger';
 
@@ -30,7 +31,7 @@ export class ProvidersController {
   constructor(
     private readonly providersService: ProvidersService,
     private readonly legalService: LegalService,
-  ) {}
+  ) { }
 
   @Post()
   @ApiOperation({ summary: 'Créer un prestataire' })
@@ -171,5 +172,35 @@ export class ProvidersController {
     @Param('pcId', ParseIntPipe) pcId: number,
   ) {
     return this.providersService.removeCategory(id, pcId);
+  }
+
+  @Patch(':id/categories/:pcId')
+  @ApiOperation({ summary: 'Mettre à jour une catégorie du prestataire' })
+  @ResponseMessage('Catégorie mise à jour avec succès')
+  updateCategory(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('pcId', ParseIntPipe) pcId: number,
+    @Body() dto: UpdateProviderCategoryDto,
+  ) {
+    return this.providersService.updateCategory(id, pcId, dto);
+  }
+
+  // Category Photos
+  @Post(':id/categories/:pcId/photos')
+  addCategoryPhoto(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('pcId', ParseIntPipe) pcId: number,
+    @Body() dto: CreateProviderPhotoDto,
+  ) {
+    return this.providersService.addCategoryPhoto(id, pcId, dto);
+  }
+
+  @Delete(':id/categories/:pcId/photos/:photoId')
+  removeCategoryPhoto(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('pcId', ParseIntPipe) pcId: number,
+    @Param('photoId', ParseUUIDPipe) photoId: string,
+  ) {
+    return this.providersService.removeCategoryPhoto(id, pcId, photoId);
   }
 }

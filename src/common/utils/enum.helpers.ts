@@ -57,15 +57,22 @@ export function canTransitionDemandStatus(
       DemandStatus.CANCELLED_BY_CLIENT,
     ],
 
-    // Proposition envoyée → client peut accepter, refuser, ou annuler
+    // Proposition envoyée → prestataire peut accepter/refuser ou client peut annuler
     [DemandStatus.PROPOSAL_SENT]: [
-      DemandStatus.ACCEPTED_BY_CLIENT,
-      DemandStatus.REFUSED_BY_CLIENT,
+      DemandStatus.ACCEPTED_BY_PROVIDER,
+      DemandStatus.REFUSED_BY_PROVIDER,
       DemandStatus.CANCELLED_BY_CLIENT,
     ],
 
     // Refusée par prestataire → TERMINAL (pas de transition)
     [DemandStatus.REFUSED_BY_PROVIDER]: [],
+
+    // Acceptée par prestataire → client peut accepter/refuser ou client peut annuler
+    [DemandStatus.ACCEPTED_BY_PROVIDER]: [
+      DemandStatus.ACCEPTED_BY_CLIENT,
+      DemandStatus.REFUSED_BY_CLIENT,
+      DemandStatus.CANCELLED_BY_CLIENT,
+    ],
 
     // Acceptée par client → peut être confirmée ou annulée
     [DemandStatus.ACCEPTED_BY_CLIENT]: [
@@ -124,11 +131,16 @@ export function getAvailableTransitions(status: DemandStatus): DemandStatus[] {
       DemandStatus.CANCELLED_BY_CLIENT,
     ],
     [DemandStatus.PROPOSAL_SENT]: [
+      DemandStatus.ACCEPTED_BY_PROVIDER,
+      DemandStatus.REFUSED_BY_PROVIDER,
+      DemandStatus.CANCELLED_BY_CLIENT,
+    ],
+    [DemandStatus.REFUSED_BY_PROVIDER]: [],
+    [DemandStatus.ACCEPTED_BY_PROVIDER]: [
       DemandStatus.ACCEPTED_BY_CLIENT,
       DemandStatus.REFUSED_BY_CLIENT,
       DemandStatus.CANCELLED_BY_CLIENT,
     ],
-    [DemandStatus.REFUSED_BY_PROVIDER]: [],
     [DemandStatus.ACCEPTED_BY_CLIENT]: [
       DemandStatus.MISSION_CONFIRMED,
       DemandStatus.CANCELLED_BY_CLIENT,
@@ -216,6 +228,7 @@ export function getDemandStatusColor(status: DemandStatus): string {
     [DemandStatus.UNDER_STUDY]: 'bg-yellow-100 text-yellow-800',
     [DemandStatus.PROPOSAL_SENT]: 'bg-purple-100 text-purple-800',
     [DemandStatus.REFUSED_BY_PROVIDER]: 'bg-red-100 text-red-800',
+    [DemandStatus.ACCEPTED_BY_PROVIDER]: 'bg-cyan-100 text-cyan-800',
     [DemandStatus.ACCEPTED_BY_CLIENT]: 'bg-green-100 text-green-800',
     [DemandStatus.REFUSED_BY_CLIENT]: 'bg-red-100 text-red-800',
     [DemandStatus.MISSION_CONFIRMED]: 'bg-green-100 text-green-800',
@@ -238,6 +251,7 @@ export function getDemandStatusIcon(status: DemandStatus): string {
     [DemandStatus.UNDER_STUDY]: '🔍',
     [DemandStatus.PROPOSAL_SENT]: '📤',
     [DemandStatus.REFUSED_BY_PROVIDER]: '❌',
+    [DemandStatus.ACCEPTED_BY_PROVIDER]: '👍',
     [DemandStatus.ACCEPTED_BY_CLIENT]: '✅',
     [DemandStatus.REFUSED_BY_CLIENT]: '❌',
     [DemandStatus.MISSION_CONFIRMED]: '✔️',

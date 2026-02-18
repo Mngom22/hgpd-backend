@@ -6,6 +6,7 @@ import { Provider } from './entities/provider.entity';
 import { ProviderPhoto } from './entities/provider-photo.entity';
 import { ProviderVideo } from './entities/provider-video.entity';
 import { ProviderCategory } from './entities/provider-category.entity';
+import { ProviderCategoryPhoto } from './entities/provider-category-photo.entity';
 import { ProviderStats } from './entities/provider-stats.entity';
 import { LegalModule } from '../legal/legal.module';
 
@@ -16,6 +17,7 @@ import { LegalModule } from '../legal/legal.module';
       ProviderPhoto,
       ProviderVideo,
       ProviderCategory,
+      ProviderCategoryPhoto,
       ProviderStats,
     ]),
     LegalModule,

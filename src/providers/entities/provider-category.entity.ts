@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
   Index,
   Unique,
@@ -11,6 +12,7 @@ import {
 import { Provider } from './provider.entity';
 import { Category } from '../../categories/entities/category.entity';
 import { SubCategory } from '../../categories/entities/sub-category.entity';
+import { ProviderCategoryPhoto } from './provider-category-photo.entity';
 
 @Entity('provider_categories')
 @Unique(['providerId', 'categoryId', 'subCategoryId'])
@@ -28,6 +30,9 @@ export class ProviderCategory {
 
   @Column({ name: 'sub_category_id', type: 'int', nullable: true })
   subCategoryId: number;
+
+  @Column({ type: 'text', nullable: true })
+  description: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt: Date;
@@ -55,4 +60,7 @@ export class ProviderCategory {
   )
   @JoinColumn({ name: 'sub_category_id' })
   subCategory: SubCategory;
+
+  @OneToMany(() => ProviderCategoryPhoto, (photo) => photo.providerCategory)
+  photos: ProviderCategoryPhoto[];
 }

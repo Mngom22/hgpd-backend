@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demande Acceptée par Prestataire - HGPD</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      text-align: center;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 20px;
+      margin-bottom: 25px;
+    }
+    .header h1 {
+      color: #007bff;
+      margin: 0;
+      font-size: 24px;
+    }
+    .status-badge {
+      display: inline-block;
+      background-color: #28a745;
+      color: white;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    .info-box {
+      background-color: #e7f3ff;
+      border: 1px solid #b3d9ff;
+      border-radius: 6px;
+      padding: 15px;
+      margin: 20px 0;
+    }
+    .info-box p {
+      margin: 0;
+      color: #004085;
+    }
+    .section {
+      background-color: #f8f9fa;
+      border-radius: 6px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .section h2 {
+      color: #495057;
+      font-size: 18px;
+      margin-top: 0;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #dee2e6;
+      padding-bottom: 10px;
+    }
+    .detail-row {
+      display: flex;
+      margin-bottom: 12px;
+    }
+    .detail-label {
+      font-weight: 600;
+      color: #495057;
+      min-width: 180px;
+    }
+    .detail-value {
+      color: #6c757d;
+      flex-grow: 1;
+    }
+    .provider-info {
+      background-color: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 6px;
+      padding: 15px;
+      margin: 20px 0;
+    }
+    .provider-info h3 {
+      margin-top: 0;
+      color: #856404;
+    }
+    .footer {
+      text-align: center;
+      border-top: 1px solid #dee2e6;
+      padding-top: 20px;
+      margin-top: 30px;
+      font-size: 12px;
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Nouvelle Demande Acceptée</h1>
+      <span class="status-badge">✓ Acceptée par le Prestataire</span>
+    </div>
+
+    <div class="info-box">
+      <p><strong>Notification SDR:</strong> Un prestataire a accepté une demande. Action requise pour le suivi client.</p>
+    </div>
+
+    <div class="section">
+      <h2>📋 Informations de l'Événement</h2>
+      <div class="detail-row">
+        <span class="detail-label">Type d'événement:</span>
+        <span class="detail-value">{{eventNature}}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Date:</span>
+        <span class="detail-value">{{eventDate}}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Nombre d'invités:</span>
+        <span class="detail-value">{{approximateGuests}}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Lieu:</span>
+        <span class="detail-value">{{location}}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Budget estimé:</span>
+        <span class="detail-value">{{budget}}</span>
+      </div>
+    </div>
+
+    <div class="provider-info">
+      <h3>👤 Informations du Prestataire</h3>
+      <div class="detail-row">
+        <span class="detail-label">Nom:</span>
+        <span class="detail-value">{{providerName}}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Entreprise:</span>
+        <span class="detail-value">{{companyName}}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Email:</span>
+        <span class="detail-value">{{providerEmail}}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Téléphone:</span>
+        <span class="detail-value">{{providerPhone}}</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>👥 Informations du Client (Organisateur)</h2>
+      <div class="detail-row">
+        <span class="detail-label">Nom:</span>
+        <span class="detail-value">{{organizerName}}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Email:</span>
+        <span class="detail-value">{{organizerEmail}}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Téléphone:</span>
+        <span class="detail-value">{{organizerPhone}}</span>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <p><strong>Action requise:</strong><br>
+      • Contacter le prestataire pour finaliser les détails<br>
+      • Mettre en place le devis<br>
+      • Planifier le follow-up client</p>
+    </div>
+
+    <div class="footer">
+      <p>© {{year}} HGPD - Tous droits réservés</p>
+      <p>Cet email a été généré automatiquement suite à l'acceptation d'une demande par un prestataire.</p>
+    </div>
+  </div>
+</body>
+</html>

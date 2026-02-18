@@ -21,6 +21,12 @@ export class ProviderStats {
   @Column({ name: 'demands_received', type: 'int', default: 0 })
   demandsReceived: number;
 
+  @Column({ name: 'demands_accepted', type: 'int', default: 0 })
+  demandsAccepted: number;
+
+  @Column({ name: 'demands_refused', type: 'int', default: 0 })
+  demandsRefused: number;
+
   @Column({ name: 'missions_completed', type: 'int', default: 0 })
   missionsCompleted: number;
 

@@ -11,7 +11,6 @@ import { IdentityDocType } from '../../common/enums';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateProviderDto {
-  w;
   @ApiProperty({ example: 'Sidy' })
   @IsString()
   @MaxLength(100)
@@ -37,11 +36,6 @@ export class CreateProviderDto {
   @IsString()
   @MaxLength(1000)
   shortDescription?: string;
-
-  @ApiProperty({ example: 'Dakar' })
-  @IsString()
-  @MaxLength(100)
-  department: string;
 
   @ApiProperty({ example: 'Parcelles Assainies' })
   @IsString()

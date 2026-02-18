@@ -86,9 +86,16 @@ export class AuthService {
 
     this.logger.log(`New provider registered: ${savedProvider.id}`);
 
-    // Envoyer email de verification si email fourni
+    // Envoyer email de verification si email fourni (non-bloquant)
     if (savedProvider.email) {
-      await this.sendEmailVerification(savedProvider.id, savedProvider.email);
+      this.sendEmailVerification(savedProvider.id, savedProvider.email).catch(
+        (err) => {
+          this.logger.warn(
+            `Failed to send email verification to ${savedProvider.email}: ${err.message}`,
+          );
+          // Ne pas bloquer l'inscription si l'email échoue
+        },
+      );
     }
 
     // Generer les tokens

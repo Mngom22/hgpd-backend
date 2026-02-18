@@ -32,10 +32,11 @@ export class ProviderRegisterDto {
   @MaxLength(200)
   activity: string;
 
-  @ApiProperty({ example: 'Dakar', description: 'Departement' })
+  @ApiPropertyOptional({ example: 'Dakar', description: 'Departement (optionnel)' })
+  @IsOptional()
   @IsString()
   @MaxLength(100)
-  department: string;
+  department?: string;
 
   @ApiProperty({ example: 'Parcelles Assainies', description: 'Commune' })
   @IsString()

@@ -41,6 +41,12 @@ export class ProviderBudgetDto {
   @IsNumber()
   @Min(0)
   budget: number;
+
+  @ApiProperty({ example: 5250, description: 'Prix du lead basé sur le budget' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  leadPrice?: number;
 }
 
 export class CreateDemandDto {

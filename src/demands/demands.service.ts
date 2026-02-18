@@ -24,7 +24,7 @@ import { WhatsAppService } from '../whatsapp/whatsapp.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { EventsGateway } from '../events/events.gateway';
 import { NotificationType, NotificationChannel } from '../common/enums';
-
+import { ProvidersService } from '../providers/providers.service';
 import { Admin } from '../auth/entities/admin.entity';
 
 const MAX_PROVIDERS_PER_DEMAND = 5;
@@ -52,12 +52,13 @@ export class DemandsService {
     private readonly whatsAppService: WhatsAppService,
     private readonly notificationsService: NotificationsService,
     private readonly eventsGateway: EventsGateway,
+    private readonly providersService: ProvidersService,
   ) { }
 
   // Demands CRUD
   async create(dto: CreateDemandDto): Promise<Demand> {
     this.logger.log(`Creating demand: ${JSON.stringify(dto)}`);
-    const { providerIds, categoryBudgets, providerBudgets, ...demandData } = dto;
+    const { providerIds, categoryBudgets, providerBudgets, budget, ...demandData } = dto;
 
     // Valider les prestataires si fournis
     if (providerIds && providerIds.length > 0) {
@@ -94,11 +95,14 @@ export class DemandsService {
     if (providers.length > 0) {
       // S'assurer de ne traiter que les prestataires trouvés en base
       const demandProvidersEntries = providers.map((provider) => {
-        const specificBudget = providerBudgets?.find(pb => pb.providerId === provider.id)?.budget;
+        const providerBudgetData = providerBudgets?.find(pb => pb.providerId === provider.id);
+        const specificBudget = providerBudgetData?.budget;
+        const specificLeadPrice = providerBudgetData?.leadPrice;
         return this.demandProviderRepository.create({
           demandId: savedDemand.id,
           providerId: provider.id,
           budget: specificBudget,
+          leadPrice: specificLeadPrice,
         });
       });
       savedDemandProviders = await this.demandProviderRepository.save(demandProvidersEntries);
@@ -107,17 +111,25 @@ export class DemandsService {
       this.logger.warn(`No valid providers found in database for IDs: ${providerIds.join(', ')}. Demand will have no provider associations.`);
     }
 
-    // Récupérer les catégories des prestataires pour les notifications
+    // Récupérer les catégories des prestataires pour les notifications (avec relations)
     const providerCategories = providers.length > 0
-      ? await this.providerCategoryRepository.find({ where: { providerId: In(providers.map(p => p.id)) } })
+      ? await this.providerCategoryRepository.find({
+          where: { providerId: In(providers.map(p => p.id)) },
+          relations: ['category'],
+        })
       : [];
 
     const providerCategoriesMap = new Map<string, number[]>();
+    const providerCategoryNamesMap = new Map<string, string[]>();
     for (const pc of providerCategories) {
       if (!providerCategoriesMap.has(pc.providerId)) {
         providerCategoriesMap.set(pc.providerId, []);
+        providerCategoryNamesMap.set(pc.providerId, []);
       }
       providerCategoriesMap.get(pc.providerId)!.push(pc.categoryId);
+      if (pc.category?.name) {
+        providerCategoryNamesMap.get(pc.providerId)!.push(pc.category.name);
+      }
     }
 
     // Notifications en arrière-plan (TRÈS non-bloquant : uniquement les appels réseau externes)
@@ -137,7 +149,7 @@ export class DemandsService {
         if (providers.length > 0) {
           // Mails prestataires
           notificationPromises.push(
-            this.mailService.sendDemandNotificationToMultipleProviders(providers, savedDemand, savedBudgets, providerCategoriesMap)
+            this.mailService.sendDemandNotificationToMultipleProviders(providers, savedDemand, savedBudgets, providerCategoriesMap, providerCategoryNamesMap)
               .catch(e => this.logger.error(`Providers mail failed: ${e.message}`))
           );
           // WhatsApp prestataires
@@ -354,12 +366,33 @@ export class DemandsService {
     Object.assign(dp, dto);
     const savedDp = await this.demandProviderRepository.save(dp);
 
+    // Update stats based on status change
+    if (dto.status && dto.status !== previousStatus) {
+      await this.updateProviderStats(savedDp.providerId, previousStatus, dto.status);
+    }
+
     // Envoyer email au prestataire si statut passe a MISSION_CONFIRMED
     if (
       dto.status === DemandStatus.MISSION_CONFIRMED &&
       previousStatus !== DemandStatus.MISSION_CONFIRMED
     ) {
       await this.sendMissionConfirmedNotification(savedDp);
+    }
+
+    // Envoyer notification quand acceptée par le prestataire
+    if (
+      dto.status === DemandStatus.ACCEPTED_BY_PROVIDER &&
+      previousStatus !== DemandStatus.ACCEPTED_BY_PROVIDER
+    ) {
+      await this.sendProviderAcceptanceNotification(savedDp);
+    }
+
+    // Envoyer notification quand refusée par le prestataire
+    if (
+      dto.status === DemandStatus.REFUSED_BY_PROVIDER &&
+      previousStatus !== DemandStatus.REFUSED_BY_PROVIDER
+    ) {
+      await this.sendProviderRefusalNotification(savedDp);
     }
 
     // Notify Admin of status change
@@ -420,6 +453,53 @@ export class DemandsService {
         `Failed to send mission confirmed email for DemandProvider ${dp.id}: ${error.message}`,
       );
       // Ne pas faire echouer la mise a jour si l'email echoue
+    }
+  }
+
+  private async sendProviderAcceptanceNotification(
+    dp: DemandProvider,
+  ): Promise<void> {
+    try {
+      // Charger les relations necessaires
+      const demandProvider = await this.demandProviderRepository.findOne({
+        where: { id: dp.id },
+        relations: ['demand', 'demand.organizer', 'provider'],
+      });
+
+      if (!demandProvider?.demand || !demandProvider?.provider) {
+        this.logger.warn(
+          `Cannot send acceptance notification: missing demand or provider for DemandProvider ${dp.id}`,
+        );
+        return;
+      }
+
+      const demand = demandProvider.demand;
+      const provider = demandProvider.provider;
+      const organizer = demand.organizer;
+
+      // 1. Envoyer email au prestataire
+      if (provider.email) {
+        try {
+          await this.mailService.sendProviderAcceptanceEmail(provider, demand, organizer);
+          this.logger.log(`Provider acceptance email sent to ${provider.email}`);
+        } catch (error) {
+          this.logger.error(`Failed to send provider acceptance email: ${error.message}`);
+        }
+      }
+
+      // 2. Envoyer email à sdr@beussdoutouti.com
+      try {
+        await this.mailService.sendAdminAcceptanceNotification(provider, demand, organizer);
+        this.logger.log(`Admin acceptance notification sent for DemandProvider ${dp.id}`);
+      } catch (error) {
+        this.logger.error(`Failed to send admin acceptance notification: ${error.message}`);
+      }
+
+    } catch (error) {
+      this.logger.error(
+        `Failed to send provider acceptance notification for DemandProvider ${dp.id}: ${error.message}`,
+      );
+      // Ne pas faire echouer la mise a jour si les notifications echouent
     }
   }
 
@@ -563,5 +643,139 @@ export class DemandsService {
     });
 
     return { total, completed, pending };
+  }
+
+  // Approve demand for provider and send notification
+  async approveDemandForProvider(demandId: string, providerId: string): Promise<DemandProvider> {
+    const demandProvider = await this.demandProviderRepository.findOne({
+      where: { demandId, providerId },
+      relations: ['demand', 'demand.organizer', 'provider'],
+    });
+
+    if (!demandProvider) {
+      throw new NotFoundException(`Demand-Provider association not found`);
+    }
+
+    // Mark as approved by admin
+    demandProvider.adminApprovedAt = new Date();
+    const updated = await this.demandProviderRepository.save(demandProvider);
+
+    // Charger les catégories du prestataire pour filtrer les messages
+    const providerCategories = await this.providerCategoryRepository.find({
+      where: { providerId },
+      relations: ['category'],
+    });
+    const providerCategoryNames = providerCategories
+      .filter((pc) => pc.category?.name)
+      .map((pc) => pc.category!.name);
+
+    // Send email notification to provider with organizer details
+    try {
+      if (demandProvider.provider?.email && demandProvider.demand?.organizer) {
+        await this.mailService.sendApprovalNotificationWithOrganizerDetails(
+          demandProvider.provider,
+          demandProvider.demand,
+          demandProvider.demand.organizer,
+          demandProvider.leadPrice,
+          providerCategoryNames,
+        );
+      }
+    } catch (error) {
+      this.logger.warn(`Failed to send approval email: ${error.message}`);
+    }
+
+    // Create in-app notification
+    try {
+      await this.notificationsService.createNotification({
+        recipientId: providerId,
+        recipientType: 'provider',
+        type: NotificationType.NEW_DEMAND,
+        channel: NotificationChannel.EMAIL,
+        content: {
+          demandId: demandId,
+          message: `Votre demande a été approuvée! Les coordonnées du client sont prêtes: ${demandProvider.demand?.eventNature}`,
+        },
+      });
+    } catch (error) {
+      this.logger.warn(`Failed to create notification: ${error.message}`);
+    }
+
+    return updated;
+  }
+
+  private async updateProviderStats(
+    providerId: string,
+    previousStatus: DemandStatus,
+    newStatus: DemandStatus,
+  ): Promise<void> {
+    try {
+      const stats = await this.providersService.getStats(providerId);
+      
+      // Décrementer l'ancien statut si applicable
+      if (previousStatus === DemandStatus.ACCEPTED_BY_PROVIDER) {
+        stats.demandsAccepted = Math.max(0, (stats.demandsAccepted || 0) - 1);
+      } else if (previousStatus === DemandStatus.REFUSED_BY_PROVIDER) {
+        stats.demandsRefused = Math.max(0, (stats.demandsRefused || 0) - 1);
+      }
+      
+      // Incrémenter le nouveau statut
+      if (newStatus === DemandStatus.ACCEPTED_BY_PROVIDER) {
+        stats.demandsAccepted = (stats.demandsAccepted || 0) + 1;
+      } else if (newStatus === DemandStatus.REFUSED_BY_PROVIDER) {
+        stats.demandsRefused = (stats.demandsRefused || 0) + 1;
+      }
+      
+      stats.lastUpdated = new Date();
+      await this.providersService.updateStats(providerId, stats);
+      
+      // Notify provider of stats update via WebSocket
+      this.eventsGateway.emitToProvider(providerId, 'stats_updated', stats);
+    } catch (error) {
+      this.logger.error(`Failed to update provider stats: ${error.message}`);
+    }
+  }
+
+  private async sendProviderRefusalNotification(
+    dp: DemandProvider,
+  ): Promise<void> {
+    try {
+      const demandProvider = await this.demandProviderRepository.findOne({
+        where: { id: dp.id },
+        relations: ['demand', 'demand.organizer', 'provider'],
+      });
+
+      if (!demandProvider?.demand || !demandProvider?.provider) {
+        this.logger.warn(
+          `Cannot send refusal notification: missing demand or provider for DemandProvider ${dp.id}`,
+        );
+        return;
+      }
+
+      const demand = demandProvider.demand;
+      const provider = demandProvider.provider;
+
+      // 1. Log provider refusal
+      this.logger.log(`Provider ${dp.providerId} refused demand ${dp.demandId}. Reason: ${dp.nonConversionComment}`);
+
+      // 2. Send notification to admin about refusal
+      const activeAdmins = await this.adminRepository.find({ where: { isActive: true } });
+      for (const admin of activeAdmins) {
+        await this.notificationsService.createNotification({
+          recipientId: admin.id,
+          recipientType: 'admin',
+          type: NotificationType.DEMAND_STATUS_CHANGED,
+          channel: NotificationChannel.EMAIL,
+          content: {
+            demandProviderId: dp.id,
+            status: DemandStatus.REFUSED_BY_PROVIDER,
+            message: `Le prestataire ${provider.companyName || `${provider.firstName} ${provider.lastName}`} a refusé la demande pour ${demand.eventNature}: ${dp.nonConversionComment}`,
+          },
+        });
+      }
+
+      this.logger.log(`Provider refusal notification sent for DemandProvider ${dp.id}`);
+    } catch (error) {
+      this.logger.error(`Error in sendProviderRefusalNotification: ${error.message}`);
+    }
   }
 }

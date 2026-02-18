@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demande approuvée - Coordonnées disponibles</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      text-align: center;
+      border-bottom: 3px solid #28a745;
+      padding-bottom: 20px;
+      margin-bottom: 25px;
+    }
+    .header h1 {
+      color: #28a745;
+      margin: 0;
+      font-size: 24px;
+    }
+    .approval-badge {
+      display: inline-block;
+      background-color: #d4edda;
+      color: #155724;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+    .greeting {
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    .success-message {
+      background-color: #d4edda;
+      border: 1px solid #c3e6cb;
+      border-radius: 6px;
+      padding: 15px;
+      margin: 20px 0;
+      color: #155724;
+    }
+    .section {
+      background-color: #f8f9fa;
+      border-radius: 6px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .section h2 {
+      color: #495057;
+      font-size: 16px;
+      margin-top: 0;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #28a745;
+      padding-bottom: 10px;
+    }
+    .detail-row {
+      display: flex;
+      margin-bottom: 12px;
+      align-items: flex-start;
+    }
+    .detail-label {
+      font-weight: 600;
+      color: #495057;
+      min-width: 140px;
+    }
+    .detail-value {
+      color: #212529;
+      flex: 1;
+    }
+    .organizer-contact {
+      background-color: #e7f5ff;
+      border-left: 4px solid #0066cc;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+    .organizer-contact h3 {
+      margin-top: 0;
+      color: #0066cc;
+      font-size: 14px;
+    }
+    .organizer-contact p {
+      margin: 8px 0;
+      font-size: 14px;
+    }
+    .organizer-contact .label {
+      font-weight: 600;
+      color: #004085;
+    }
+    .lead-price {
+      background-color: #fff3cd;
+      border: 2px solid #ffc107;
+      border-radius: 6px;
+      padding: 15px;
+      margin: 15px 0;
+      text-align: center;
+    }
+    .lead-price h3 {
+      color: #856404;
+      margin: 0 0 5px 0;
+      font-size: 14px;
+    }
+    .lead-price .amount {
+      color: #ff8c00;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .cta {
+      text-align: center;
+      margin: 30px 0;
+    }
+    .cta-button {
+      display: inline-block;
+      background-color: #28a745;
+      color: #ffffff;
+      text-decoration: none;
+      padding: 14px 35px;
+      border-radius: 5px;
+      font-weight: 600;
+      font-size: 16px;
+      transition: background-color 0.3s;
+    }
+    .cta-button:hover {
+      background-color: #218838;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #dee2e6;
+      color: #6c757d;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>✅ Demande Approuvée</h1>
+      <div class="approval-badge">Prête à être traitée</div>
+    </div>
+
+    <div class="greeting">
+      <p>Bonjour <strong>{{providerName}}</strong>,</p>
+      <p>Excellente nouvelle ! Votre demande a été approuvée par notre équipe HGPD.</p>
+    </div>
+
+    <div class="success-message">
+      <strong>✔ Les coordonnées du client sont maintenant disponibles ci-dessous !</strong>
+      <p>Vous pouvez maintenant accéder au profil complet du client et décider d'accepter ou refuser la prestation.</p>
+    </div>
+
+    <!-- Détails de la demande -->
+    <div class="section">
+      <h2>📋 Détails de la demande</h2>
+
+      <div class="detail-row">
+        <span class="detail-label">Type d'événement :</span>
+        <span class="detail-value"><strong>{{eventNature}}</strong></span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Date :</span>
+        <span class="detail-value">{{eventDate}}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Nombre d'invités :</span>
+        <span class="detail-value">{{approximateGuests}} personnes</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Lieu :</span>
+        <span class="detail-value">{{location}}</span>
+      </div>
+
+      {{#if geographicZone}}
+      <div class="detail-row">
+        <span class="detail-label">Zone :</span>
+        <span class="detail-value">{{geographicZone}}</span>
+      </div>
+      {{/if}}
+
+      <div class="detail-row">
+        <span class="detail-label">Budget de la prestation :</span>
+        <span class="detail-value"><strong style="color: #e67e22;">{{budget}}</strong></span>
+      </div>
+
+      {{#if additionalInfo}}
+      <div style="background-color: #e9ecef; padding: 12px; border-radius: 4px; margin-top: 15px;">
+        <p style="font-weight: 600; margin: 0 0 8px 0; font-size: 14px;">Détails supplémentaires</p>
+        <p style="margin: 0; font-size: 13px;">{{additionalInfo}}</p>
+      </div>
+      {{/if}}
+    </div>
+
+    <!-- Coordonnées de l'organisateur -->
+    <div class="section">
+      <h2>👤 Contact de l'organisateur</h2>
+
+      <div class="organizer-contact">
+        <h3>Informations de contact</h3>
+
+        <p>
+          <span class="label">Nom :</span>
+          <br>{{organizerName}}
+        </p>
+
+        <p>
+          <span class="label">Email :</span>
+          <br>
+          <a href="mailto:{{organizerEmail}}" style="color: #0066cc; text-decoration: none;">
+            {{organizerEmail}}
+          </a>
+        </p>
+
+        <p>
+          <span class="label">Téléphone :</span>
+          <br>
+          <a href="tel:{{organizerPhone}}" style="color: #0066cc; text-decoration: none;">
+            {{organizerPhone}}
+          </a>
+        </p>
+
+        {{#if organizerDepartment}}
+        <p>
+          <span class="label">Localisation :</span>
+          <br>{{organizerCommune}}, {{organizerDepartment}}
+        </p>
+        {{/if}}
+      </div>
+    </div>
+
+    <!-- Prix du lead payé -->
+    <div class="lead-price">
+      <h3>💳 Prix du lead payé</h3>
+      <div class="amount">{{leadPrice}}</div>
+      <p style="margin: 10px 0 0 0; font-size: 12px; color: #856404;">
+        Vous avez déjà payé pour débloquer cette prestation
+      </p>
+    </div>
+
+    <!-- Appel à l'action -->
+    <div class="cta">
+      <p><strong>Connectez-vous à votre espace pour accepter ou refuser cette prestation.</strong></p>
+      <a href="{{platformUrl}}" class="cta-button">Accéder à la plateforme</a>
+    </div>
+
+    <!-- Instructions supplémentaires -->
+    <div style="background-color: #f0f8ff; border-radius: 6px; padding: 15px; margin: 20px 0; font-size: 13px;">
+      <p style="margin: 0 0 8px 0;"><strong>Que faire maintenant ?</strong></p>
+      <ul style="margin: 0; padding-left: 20px;">
+        <li>Examinez les détails complets de la demande sur la plateforme</li>
+        <li>Contactez directement le client pour discuter des détails</li>
+        <li>Acceptez ou refusez la prestation dans votre tableau de bord</li>
+      </ul>
+    </div>
+
+    <div class="footer">
+      <p>Cet email a été envoyé automatiquement par HGPD.</p>
+      <p>&copy; {{year}} HGPD - Tous droits réservés</p>
+    </div>
+  </div>
+</body>
+</html>

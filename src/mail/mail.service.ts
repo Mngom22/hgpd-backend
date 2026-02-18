@@ -27,6 +27,7 @@ export class MailService {
     demand: Demand,
     demandBudgets?: DemandBudget[],
     providerCategoryIds?: number[],
+    providerCategoryNames?: string[],
   ): Promise<void> {
     if (!provider.email) {
       this.logger.warn(
@@ -45,6 +46,12 @@ export class MailService {
               amount: this.formatCurrency(Number(db.amount)),
             }))
         : [];
+
+    // Filtrer additionalInfo pour ne montrer que les messages des catégories du prestataire
+    const filteredAdditionalInfo = this.parseAndFilterAdditionalInfo(
+      demand.additionalInfo,
+      providerCategoryNames || [],
+    );
 
     try {
       await this.mailerService.sendMail({
@@ -65,8 +72,7 @@ export class MailService {
             : 'Non spécifié',
           categoryBudgets: providerBudgets,
           hasCategoryBudgets: providerBudgets.length > 0,
-          additionalInfo:
-            demand.additionalInfo || 'Aucune information supplémentaire',
+          additionalInfo: filteredAdditionalInfo || 'Aucune information supplémentaire',
           platformUrl: this.platformUrl,
           year: new Date().getFullYear(),
         },
@@ -88,6 +94,7 @@ export class MailService {
     demand: Demand,
     demandBudgets?: DemandBudget[],
     providerCategoriesMap?: Map<string, number[]>,
+    providerCategoryNamesMap?: Map<string, string[]>,
   ): Promise<{ success: string[]; failed: string[] }> {
     const results = { success: [] as string[], failed: [] as string[] };
 
@@ -95,11 +102,14 @@ export class MailService {
       try {
         const providerCategoryIds =
           providerCategoriesMap?.get(provider.id) || [];
+        const providerCategoryNames =
+          providerCategoryNamesMap?.get(provider.id) || [];
         await this.sendDemandNotification(
           provider,
           demand,
           demandBudgets,
           providerCategoryIds,
+          providerCategoryNames,
         );
         if (provider.email) {
           results.success.push(provider.email);
@@ -112,6 +122,66 @@ export class MailService {
     }
 
     return results;
+  }
+
+  async sendApprovalNotificationWithOrganizerDetails(
+    provider: Provider,
+    demand: Demand,
+    organizer: Organizer,
+    leadPrice?: number,
+    providerCategoryNames?: string[],
+  ): Promise<void> {
+    if (!provider.email) {
+      this.logger.warn(
+        `Provider ${provider.id} has no email address, skipping approval notification`,
+      );
+      return;
+    }
+
+    // Filtrer additionalInfo pour ne montrer que les messages des catégories du prestataire
+    const filteredAdditionalInfo = this.parseAndFilterAdditionalInfo(
+      demand.additionalInfo,
+      providerCategoryNames || [],
+    );
+
+    try {
+      await this.mailerService.sendMail({
+        to: provider.email,
+        subject: `✅ Demande approuvée - ${demand.eventNature}`,
+        template: 'approval-demand',
+        context: {
+          providerName: `${provider.firstName} ${provider.lastName}`,
+          companyName: provider.companyName,
+          eventNature: demand.eventNature,
+          eventDate: this.formatDate(new Date(demand.eventDate)),
+          approximateGuests: demand.approximateGuests || 'Non spécifié',
+          location: demand.location || 'Non spécifié',
+          geographicZone: demand.geographicZone || 'Non spécifié',
+          budget: demand.budget
+            ? this.formatCurrency(demand.budget)
+            : 'Non spécifié',
+          leadPrice: leadPrice ? this.formatCurrency(leadPrice) : 'Gratuit',
+          // Coordonnées organisateur
+          organizerName: `${organizer.firstName} ${organizer.lastName}`,
+          organizerPhone: organizer.phone || 'Non spécifié',
+          organizerEmail: organizer.email || 'Non spécifié',
+          organizerCommune: organizer.commune || 'Non spécifié',
+          organizerDepartment: organizer.department || 'Non spécifié',
+          additionalInfo: filteredAdditionalInfo || 'Aucune information supplémentaire',
+          platformUrl: this.platformUrl,
+          year: new Date().getFullYear(),
+        },
+      });
+
+      this.logger.log(
+        `Approval notification sent to provider ${provider.email} for demand ${demand.id}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to send approval notification to ${provider.email}: ${error.message}`,
+      );
+      throw error;
+    }
   }
 
   async sendDemandNotificationToAdmin(
@@ -394,7 +464,137 @@ export class MailService {
     }
   }
 
+  async sendProviderAcceptanceEmail(
+    provider: Provider,
+    demand: Demand,
+    organizer?: Organizer,
+  ): Promise<void> {
+    if (!provider.email) {
+      this.logger.warn(
+        `Provider ${provider.id} has no email address, skipping acceptance notification`,
+      );
+      return;
+    }
+
+    try {
+      await this.mailerService.sendMail({
+        to: provider.email,
+        subject: `Demande acceptée - ${demand.eventNature}`,
+        template: 'provider-acceptance',
+        context: {
+          providerName: `${provider.firstName} ${provider.lastName}`,
+          companyName: provider.companyName,
+          eventNature: demand.eventNature,
+          eventDate: this.formatDate(new Date(demand.eventDate)),
+          approximateGuests: demand.approximateGuests || 'Non spécifié',
+          location: demand.location || 'Non spécifié',
+          organizerName: organizer
+            ? `${organizer.firstName} ${organizer.lastName}`
+            : 'Organisateur',
+          platformUrl: this.platformUrl,
+          year: new Date().getFullYear(),
+        },
+      });
+
+      this.logger.log(
+        `Provider acceptance email sent to ${provider.email} for demand ${demand.id}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to send provider acceptance email to ${provider.email}: ${error.message}`,
+      );
+      throw error;
+    }
+  }
+
+  async sendAdminAcceptanceNotification(
+    provider: Provider,
+    demand: Demand,
+    organizer?: Organizer,
+  ): Promise<void> {
+    const adminEmail = 'sdr@beussdoutouti.com';
+
+    try {
+      await this.mailerService.sendMail({
+        to: adminEmail,
+        subject: `Demande acceptée par prestataire - ${demand.eventNature}`,
+        template: 'admin-acceptance-notification',
+        context: {
+          providerName: `${provider.firstName} ${provider.lastName}`,
+          companyName: provider.companyName,
+          providerEmail: provider.email,
+          providerPhone: provider.phone || 'Non fourni',
+          eventNature: demand.eventNature,
+          eventDate: this.formatDate(new Date(demand.eventDate)),
+          approximateGuests: demand.approximateGuests || 'Non spécifié',
+          location: demand.location || 'Non spécifié',
+          budget: demand.budget
+            ? this.formatCurrency(demand.budget)
+            : 'Non spécifié',
+          organizerName: organizer
+            ? `${organizer.firstName} ${organizer.lastName}`
+            : 'Organisateur',
+          organizerEmail: organizer?.email || 'Non fourni',
+          organizerPhone: organizer?.phone || 'Non fourni',
+          platformUrl: this.platformUrl,
+          year: new Date().getFullYear(),
+        },
+      });
+
+      this.logger.log(
+        `Admin acceptance notification sent for demand ${demand.id} to ${adminEmail}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to send admin acceptance notification: ${error.message}`,
+      );
+      throw error;
+    }
+  }
+
   // ==================== HELPERS ====================
+
+  /**
+   * Parse additionalInfo and filter by provider's category names
+   * Format: "Budget [CategoryName]: xxx\nMessage [CategoryName]: yyy\nPrix du lead: zzz"
+   * Returns only lines matching provider's categories
+   */
+  private parseAndFilterAdditionalInfo(
+    additionalInfo: string,
+    providerCategoryNames: string[],
+  ): string {
+    if (!additionalInfo || providerCategoryNames.length === 0) {
+      return additionalInfo || '';
+    }
+
+    const lines = additionalInfo.split('\n').filter((l) => l.trim());
+    const filteredLines: string[] = [];
+
+    for (const line of lines) {
+      // Handle "Budget [CategoryName]: xxx" and "Message [CategoryName]: yyy" lines
+      if (line.startsWith('Budget ') || line.startsWith('Message ')) {
+        // Extract category name from "Budget [CategoryName]: xxx" format
+        const match = line.match(/^(Budget|Message)\s+([^:]+):\s*(.*)$/);
+        if (match) {
+          const categoryInLine = match[2].trim();
+          // Check if this category is in provider's categories (case-insensitive)
+          const isCategoryMatch = providerCategoryNames.some(
+            (name) =>
+              name.toLowerCase() === categoryInLine.toLowerCase() ||
+              categoryInLine.toLowerCase().includes(name.toLowerCase()),
+          );
+          if (isCategoryMatch) {
+            filteredLines.push(line);
+          }
+        }
+      } else {
+        // Keep other lines (like "Prix du lead: xxx")
+        filteredLines.push(line);
+      }
+    }
+
+    return filteredLines.join('\n');
+  }
 
   private formatDate(date: Date): string {
     return date.toLocaleDateString('fr-FR', {

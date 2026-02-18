@@ -12,6 +12,7 @@ import { MailModule } from '../mail/mail.module';
 import { WhatsAppModule } from '../whatsapp/whatsapp.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { EventsModule } from '../events/events.module';
+import { ProvidersModule } from '../providers/providers.module';
 
 import { Admin } from '../auth/entities/admin.entity';
 
@@ -30,6 +31,7 @@ import { Admin } from '../auth/entities/admin.entity';
     WhatsAppModule,
     NotificationsModule,
     EventsModule,
+    ProvidersModule,
   ],
   providers: [DemandsService],
   controllers: [DemandsController],
