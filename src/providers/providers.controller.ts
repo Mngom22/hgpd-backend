@@ -38,6 +38,7 @@ export class ProvidersController {
   @HttpCode(HttpStatus.CREATED)
   @ResponseMessage('Prestataire créé avec succès')
   create(@Body() dto: CreateProviderDto) {
+    console.log('Creating provider with data:', dto);
     return this.providersService.create(dto);
   }
 

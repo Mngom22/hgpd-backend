@@ -23,6 +23,18 @@ export class CreateCategoryDto {
   @MaxLength(50)
   icon?: string;
 
+  @ApiProperty({ example: 'https://example.com/photo.jpg', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  photoUrl?: string;
+
+  @ApiProperty({ example: 'https://example.com/video.mp4', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  videoUrl?: string;
+
   @ApiProperty({ example: 1 })
   @IsInt()
   @Min(0)

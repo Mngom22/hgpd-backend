@@ -43,7 +43,7 @@ export class MailService {
             .filter((db) => providerCategoryIds.includes(db.categoryId))
             .map((db) => ({
               categoryName: db.category?.name || 'Catégorie',
-              amount: this.formatCurrency(Number(db.amount)),
+              budgetInterval: `${this.formatCurrency(Number(db.minAmount))} – ${this.formatCurrency(Number(db.maxAmount))}`,
             }))
         : [];
 
@@ -203,7 +203,7 @@ export class MailService {
       const categoryBudgetsData = demandBudgets
         ? demandBudgets.map((db) => ({
             categoryName: db.category?.name || 'Catégorie',
-            amount: this.formatCurrency(Number(db.amount)),
+            budgetInterval: `${this.formatCurrency(Number(db.minAmount))} – ${this.formatCurrency(Number(db.maxAmount))}`,
           }))
         : [];
 
@@ -265,7 +265,7 @@ export class MailService {
     const categoryBudgetsData = demandBudgets
       ? demandBudgets.map((db) => ({
           categoryName: db.category?.name || 'Catégorie',
-          amount: this.formatCurrency(Number(db.amount)),
+          budgetInterval: `${this.formatCurrency(Number(db.minAmount))} – ${this.formatCurrency(Number(db.maxAmount))}`,
         }))
       : [];
 

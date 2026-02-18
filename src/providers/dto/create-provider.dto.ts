@@ -11,6 +11,7 @@ import { IdentityDocType } from '../../common/enums';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateProviderDto {
+
   @ApiProperty({ example: 'Sidy' })
   @IsString()
   @MaxLength(100)

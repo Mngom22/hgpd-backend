@@ -512,13 +512,14 @@ export class DemandsService {
   // Budget par catégorie - méthodes privées
   private async saveCategoryBudgets(
     demandId: string,
-    categoryBudgets: { categoryId: number; amount: number }[],
+    categoryBudgets: { categoryId: number; minAmount: number; maxAmount: number }[],
   ): Promise<void> {
     const budgetEntities = categoryBudgets.map((cb) =>
       this.demandBudgetRepository.create({
         demandId,
         categoryId: cb.categoryId,
-        amount: cb.amount,
+        minAmount: cb.minAmount,
+        maxAmount: cb.maxAmount,
       }),
     );
     await this.demandBudgetRepository.save(budgetEntities);
@@ -526,7 +527,7 @@ export class DemandsService {
 
   private async validateProvidersHaveBudget(
     providerIds: string[],
-    categoryBudgets: { categoryId: number; amount: number }[],
+    categoryBudgets: { categoryId: number; minAmount: number; maxAmount: number }[],
   ): Promise<void> {
     const budgetCategoryIds = new Set(
       categoryBudgets.map((cb) => cb.categoryId),

@@ -23,12 +23,20 @@ export class CategoryBudgetDto {
   categoryId: number;
 
   @ApiProperty({
-    example: 100000,
-    description: 'Budget alloué pour cette catégorie',
+    example: 50000,
+    description: 'Budget minimum pour cette catégorie',
   })
   @IsNumber()
   @Min(0)
-  amount: number;
+  minAmount: number;
+
+  @ApiProperty({
+    example: 100000,
+    description: 'Budget maximum pour cette catégorie',
+  })
+  @IsNumber()
+  @Min(0)
+  maxAmount: number;
 }
 
 export class ProviderBudgetDto {

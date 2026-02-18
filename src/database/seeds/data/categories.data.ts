@@ -24,8 +24,20 @@ export const categoriesData = [
       { name: 'Éclairage professionnel', slug: 'eclairage-professionnel' },
       { name: 'Écran LED', slug: 'ecran-led' },
       { name: 'Groupe électrogène', slug: 'groupe-electrogene' },
+    ],
+  },
+  {
+    name: 'Photos et vidéos',
+    slug: 'photos-et-videos',
+    description: 'Services de photographie et vidéo pour vos événements',
+    icon: 'Camera',
+    displayOrder: 3,
+    subCategories: [
       { name: 'Photographe', slug: 'photographe' },
       { name: 'Vidéaste', slug: 'videaste' },
+      { name: 'Drone', slug: 'drone' },
+      { name: 'Photobooth', slug: 'photobooth' },
+      { name: 'Studio photo', slug: 'studio-photo' },
     ],
   },
   {
@@ -33,7 +45,7 @@ export const categoriesData = [
     slug: 'traiteur',
     description: 'Services de restauration et catering',
     icon: 'UtensilsCrossed',
-    displayOrder: 3,
+    displayOrder: 4,
     subCategories: [
       { name: 'Traiteur traditionnel', slug: 'traiteur-traditionnel' },
       { name: 'Traiteur moderne', slug: 'traiteur-moderne' },
@@ -48,7 +60,7 @@ export const categoriesData = [
     slug: 'decoration',
     description: 'Services de décoration pour vos événements',
     icon: 'Sparkles',
-    displayOrder: 4,
+    displayOrder: 5,
     subCategories: [
       { name: 'Décorateur événementiel', slug: 'decorateur-evenementiel' },
       { name: 'Fleuriste', slug: 'fleuriste' },
@@ -62,7 +74,7 @@ export const categoriesData = [
     slug: 'transports',
     description: 'Services de transport et véhicules',
     icon: 'Car',
-    displayOrder: 5,
+    displayOrder: 6,
     subCategories: [
       { name: 'Location de voiture', slug: 'location-voiture' },
       { name: 'Limousine', slug: 'limousine' },
@@ -75,7 +87,7 @@ export const categoriesData = [
     slug: 'personnels',
     description: 'Personnel spécialisé pour votre événement',
     icon: 'Users',
-    displayOrder: 6,
+    displayOrder: 7,
     subCategories: [
       { name: 'Serveur', slug: 'serveur' },
       { name: 'Barman', slug: 'barman' },
@@ -88,7 +100,7 @@ export const categoriesData = [
     slug: 'pour-elle',
     description: 'Services de beauté et bien-être',
     icon: 'Heart',
-    displayOrder: 7,
+    displayOrder: 8,
     subCategories: [
       { name: 'Maquilleur/Maquilleuse', slug: 'maquilleur' },
       { name: 'Coiffeur/Coiffeuse', slug: 'coiffeur' },
@@ -102,7 +114,7 @@ export const categoriesData = [
     slug: 'animation',
     description: "Services d'animation et divertissement",
     icon: 'Music',
-    displayOrder: 8,
+    displayOrder: 9,
     subCategories: [
       { name: 'DJ', slug: 'dj' },
       { name: 'Musicien', slug: 'musicien' },

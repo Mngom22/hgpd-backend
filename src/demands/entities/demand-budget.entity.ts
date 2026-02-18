@@ -24,8 +24,11 @@ export class DemandBudget {
   @Column({ name: 'category_id', type: 'int' })
   categoryId: number;
 
-  @Column({ type: 'decimal', precision: 12, scale: 2 })
-  amount: number;
+  @Column({ name: 'min_amount', type: 'decimal', precision: 12, scale: 2 })
+  minAmount: number;
+
+  @Column({ name: 'max_amount', type: 'decimal', precision: 12, scale: 2 })
+  maxAmount: number;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt: Date;

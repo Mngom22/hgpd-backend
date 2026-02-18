@@ -30,6 +30,12 @@ export class Category {
   @Column({ name: 'display_order', type: 'int' })
   displayOrder: number;
 
+  @Column({ name: 'photo_url', type: 'varchar', length: 500, nullable: true })
+  photoUrl: string;
+
+  @Column({ name: 'video_url', type: 'varchar', length: 500, nullable: true })
+  videoUrl: string;
+
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
 
