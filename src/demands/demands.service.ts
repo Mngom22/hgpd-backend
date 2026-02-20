@@ -325,6 +325,16 @@ export class DemandsService {
     return query.orderBy('demand.createdAt', 'DESC').getMany();
   }
 
+  async findAllDemandProviders(): Promise<DemandProvider[]> {
+    return this.demandProviderRepository
+      .createQueryBuilder('dp')
+      .leftJoinAndSelect('dp.demand', 'demand')
+      .leftJoinAndSelect('demand.organizer', 'organizer')
+      .leftJoinAndSelect('dp.provider', 'provider')
+      .orderBy('demand.createdAt', 'DESC')
+      .getMany();
+  }
+
   async getDemandProvider(
     demandId: string,
     providerId: string,
