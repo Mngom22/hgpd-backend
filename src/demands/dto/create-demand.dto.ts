@@ -55,6 +55,16 @@ export class ProviderBudgetDto {
   @IsNumber()
   @Min(0)
   leadPrice?: number;
+
+  @ApiProperty({ example: 'Besoin de maquillage spécifique' })
+  @IsOptional()
+  @IsString()
+  message?: string;
+
+  @ApiProperty({ example: 1 })
+  @IsOptional()
+  @IsNumber()
+  categoryId?: number;
 }
 
 export class CreateDemandDto {

@@ -20,7 +20,7 @@ import { DemandStatus } from '../common/enums';
 
 @Controller('demands')
 export class DemandsController {
-  constructor(private readonly demandsService: DemandsService) {}
+  constructor(private readonly demandsService: DemandsService) { }
 
   @Post()
   create(@Body() dto: CreateDemandDto) {
@@ -33,6 +33,11 @@ export class DemandsController {
     @Query('status') status?: DemandStatus,
   ) {
     return this.demandsService.findAll({ organizerId, status });
+  }
+
+  @Get('all-providers')
+  findAllDemandProviders() {
+    return this.demandsService.findAllDemandProviders();
   }
 
   @Get('provider/:providerId')

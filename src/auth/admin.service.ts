@@ -58,7 +58,7 @@ export class AdminService {
     private readonly providerRepository: Repository<Provider>,
     @InjectRepository(Demand)
     private readonly demandRepository: Repository<Demand>,
-  ) {}
+  ) { }
 
   async create(dto: CreateAdminDto): Promise<Admin> {
     const existing = await this.adminRepository.findOne({
@@ -141,7 +141,8 @@ export class AdminService {
       totalDemands,
       acceptedDemands,
       refusedDemands,
-      pendingDemands,
+      newDemands,
+      pendingPaymentDemands,
       totalAdmins,
     ] = await Promise.all([
       this.userRepository.count(),
@@ -150,16 +151,21 @@ export class AdminService {
       this.providerRepository.count({ where: { isActive: false } }),
       this.demandRepository.count(),
       this.demandRepository.count({
-        where: { status: DemandStatus.ACCEPTED_BY_CLIENT },
+        where: { status: DemandStatus.MISSION_CONFIRMED },
       }),
       this.demandRepository.count({
         where: [
           { status: DemandStatus.REFUSED_BY_PROVIDER },
           { status: DemandStatus.REFUSED_BY_CLIENT },
+          { status: DemandStatus.CANCELLED_BY_CLIENT },
+          { status: DemandStatus.CANCELLED_BY_PROVIDER },
         ],
       }),
       this.demandRepository.count({
         where: { status: DemandStatus.NEW_REQUEST },
+      }),
+      this.demandRepository.count({
+        where: { status: DemandStatus.WAITING_PAYMENT },
       }),
       this.adminRepository.count(),
     ]);
@@ -175,11 +181,11 @@ export class AdminService {
         total: totalDemands,
         accepted: acceptedDemands,
         refused: refusedDemands,
-        pending: pendingDemands,
-        pendingPayment: pendingDemands, // Alias for compatibility
+        pending: newDemands,
+        pendingPayment: pendingPaymentDemands,
       },
       payments: {
-        totalRevenue: 0, // Placeholder for now
+        totalRevenue: 0,
         completed: 0,
         pending: 0,
       },

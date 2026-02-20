@@ -32,6 +32,9 @@ export class DemandProvider {
   @Column({ name: 'provider_id', type: 'uuid' })
   providerId: string;
 
+  @Column({ name: 'category_id', type: 'int', nullable: true })
+  categoryId: number;
+
   @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
   budget: number;
 
@@ -47,6 +50,9 @@ export class DemandProvider {
   status: DemandStatus;
 
   // Réponse du prestataire
+  @Column({ name: 'message', type: 'text', nullable: true })
+  message: string;
+
   @Column({ name: 'provider_response', type: 'text', nullable: true })
   providerResponse: string;
 
@@ -103,6 +109,10 @@ export class DemandProvider {
   })
   @JoinColumn({ name: 'provider_id' })
   provider: Provider;
+
+  @ManyToOne('Category', { nullable: true })
+  @JoinColumn({ name: 'category_id' })
+  category: any;
 
   @ManyToOne(() => Payment, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'payment_id' })

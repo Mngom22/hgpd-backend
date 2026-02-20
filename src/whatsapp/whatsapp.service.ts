@@ -170,6 +170,7 @@ export class WhatsAppService {
   async sendDemandNotificationToProvider(
     provider: Provider,
     demand: Demand,
+    providerMessage?: string,
   ): Promise<boolean> {
     if (!provider.phone) {
       this.logger.warn(`Provider ${provider.id} has no phone number`);
@@ -225,6 +226,8 @@ Vous avez recu une nouvelle demande sur HGPD :
 
 👤 *Contact :* ${demand.contactName}
 
+${(providerMessage || demand.additionalInfo) ? `📝 *Message :* ${providerMessage || demand.additionalInfo}` : ''}
+
 Connectez-vous a votre espace HGPD pour consulter les details et repondre a cette demande.
 
 _L'equipe HGPD_`;
@@ -238,6 +241,7 @@ _L'equipe HGPD_`;
   async sendDemandNotificationToMultipleProviders(
     providers: Provider[],
     demand: Demand,
+    providerMessagesMap?: Map<string, string>,
   ): Promise<{ success: string[]; failed: string[] }> {
     const results = { success: [] as string[], failed: [] as string[] };
 
@@ -245,6 +249,7 @@ _L'equipe HGPD_`;
       const sent = await this.sendDemandNotificationToProvider(
         provider,
         demand,
+        providerMessagesMap?.get(provider.id),
       );
       if (sent) {
         results.success.push(provider.phone);

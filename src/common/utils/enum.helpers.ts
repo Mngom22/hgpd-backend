@@ -74,9 +74,10 @@ export function canTransitionDemandStatus(
       DemandStatus.CANCELLED_BY_CLIENT,
     ],
 
-    // Acceptée par client → peut être confirmée ou annulée
+    // Acceptée par client → peut être confirmée, en attente de paiement ou annulée
     [DemandStatus.ACCEPTED_BY_CLIENT]: [
       DemandStatus.MISSION_CONFIRMED,
+      DemandStatus.WAITING_PAYMENT,
       DemandStatus.CANCELLED_BY_CLIENT,
       DemandStatus.CANCELLED_BY_PROVIDER,
     ],
@@ -89,6 +90,12 @@ export function canTransitionDemandStatus(
       DemandStatus.IN_PREPARATION,
       DemandStatus.CANCELLED_BY_CLIENT,
       DemandStatus.CANCELLED_BY_PROVIDER,
+    ],
+
+    // En attente de paiement -> peut être confirmée ou annulée
+    [DemandStatus.WAITING_PAYMENT]: [
+      DemandStatus.MISSION_CONFIRMED,
+      DemandStatus.CANCELLED_BY_CLIENT,
     ],
 
     // En préparation → événement réalisé ou annulation
@@ -152,6 +159,10 @@ export function getAvailableTransitions(status: DemandStatus): DemandStatus[] {
       DemandStatus.CANCELLED_BY_CLIENT,
       DemandStatus.CANCELLED_BY_PROVIDER,
     ],
+    [DemandStatus.WAITING_PAYMENT]: [
+      DemandStatus.MISSION_CONFIRMED,
+      DemandStatus.CANCELLED_BY_CLIENT,
+    ],
     [DemandStatus.IN_PREPARATION]: [
       DemandStatus.EVENT_COMPLETED,
       DemandStatus.CANCELLED_BY_CLIENT,
@@ -175,7 +186,8 @@ export function getNextNormalStatus(status: DemandStatus): DemandStatus | null {
     [DemandStatus.NEW_REQUEST]: DemandStatus.UNDER_STUDY,
     [DemandStatus.UNDER_STUDY]: DemandStatus.PROPOSAL_SENT,
     [DemandStatus.PROPOSAL_SENT]: DemandStatus.ACCEPTED_BY_CLIENT,
-    [DemandStatus.ACCEPTED_BY_CLIENT]: DemandStatus.MISSION_CONFIRMED,
+    [DemandStatus.ACCEPTED_BY_CLIENT]: DemandStatus.WAITING_PAYMENT,
+    [DemandStatus.WAITING_PAYMENT]: DemandStatus.MISSION_CONFIRMED,
     [DemandStatus.MISSION_CONFIRMED]: DemandStatus.IN_PREPARATION,
     [DemandStatus.IN_PREPARATION]: DemandStatus.EVENT_COMPLETED,
     [DemandStatus.EVENT_COMPLETED]: DemandStatus.COMPLETED,
@@ -193,6 +205,7 @@ export function canBeCancelled(status: DemandStatus): boolean {
     DemandStatus.UNDER_STUDY,
     DemandStatus.PROPOSAL_SENT,
     DemandStatus.ACCEPTED_BY_CLIENT,
+    DemandStatus.WAITING_PAYMENT,
     DemandStatus.MISSION_CONFIRMED,
     DemandStatus.IN_PREPARATION,
   ];
@@ -232,6 +245,7 @@ export function getDemandStatusColor(status: DemandStatus): string {
     [DemandStatus.ACCEPTED_BY_CLIENT]: 'bg-green-100 text-green-800',
     [DemandStatus.REFUSED_BY_CLIENT]: 'bg-red-100 text-red-800',
     [DemandStatus.MISSION_CONFIRMED]: 'bg-green-100 text-green-800',
+    [DemandStatus.WAITING_PAYMENT]: 'bg-yellow-100 text-yellow-800',
     [DemandStatus.IN_PREPARATION]: 'bg-indigo-100 text-indigo-800',
     [DemandStatus.EVENT_COMPLETED]: 'bg-teal-100 text-teal-800',
     [DemandStatus.COMPLETED]: 'bg-gray-100 text-gray-800',
@@ -255,6 +269,7 @@ export function getDemandStatusIcon(status: DemandStatus): string {
     [DemandStatus.ACCEPTED_BY_CLIENT]: '✅',
     [DemandStatus.REFUSED_BY_CLIENT]: '❌',
     [DemandStatus.MISSION_CONFIRMED]: '✔️',
+    [DemandStatus.WAITING_PAYMENT]: '💳',
     [DemandStatus.IN_PREPARATION]: '⚙️',
     [DemandStatus.EVENT_COMPLETED]: '🎉',
     [DemandStatus.COMPLETED]: '✅',

@@ -28,6 +28,7 @@ export class MailService {
     demandBudgets?: DemandBudget[],
     providerCategoryIds?: number[],
     providerCategoryNames?: string[],
+    providerMessage?: string,
   ): Promise<void> {
     if (!provider.email) {
       this.logger.warn(
@@ -40,15 +41,15 @@ export class MailService {
     const providerBudgets =
       demandBudgets && providerCategoryIds
         ? demandBudgets
-            .filter((db) => providerCategoryIds.includes(db.categoryId))
-            .map((db) => ({
-              categoryName: db.category?.name || 'Catégorie',
-              budgetInterval: `${this.formatCurrency(Number(db.minAmount))} – ${this.formatCurrency(Number(db.maxAmount))}`,
-            }))
+          .filter((db) => providerCategoryIds.includes(db.categoryId))
+          .map((db) => ({
+            categoryName: db.category?.name || 'Catégorie',
+            budgetInterval: `${this.formatCurrency(Number(db.minAmount))} – ${this.formatCurrency(Number(db.maxAmount))}`,
+          }))
         : [];
 
     // Filtrer additionalInfo pour ne montrer que les messages des catégories du prestataire
-    const filteredAdditionalInfo = this.parseAndFilterAdditionalInfo(
+    const filteredAdditionalInfo = providerMessage || this.parseAndFilterAdditionalInfo(
       demand.additionalInfo,
       providerCategoryNames || [],
     );
@@ -95,6 +96,7 @@ export class MailService {
     demandBudgets?: DemandBudget[],
     providerCategoriesMap?: Map<string, number[]>,
     providerCategoryNamesMap?: Map<string, string[]>,
+    providerMessagesMap?: Map<string, string>,
   ): Promise<{ success: string[]; failed: string[] }> {
     const results = { success: [] as string[], failed: [] as string[] };
 
@@ -104,12 +106,14 @@ export class MailService {
           providerCategoriesMap?.get(provider.id) || [];
         const providerCategoryNames =
           providerCategoryNamesMap?.get(provider.id) || [];
+        const providerMessage = providerMessagesMap?.get(provider.id);
         await this.sendDemandNotification(
           provider,
           demand,
           demandBudgets,
           providerCategoryIds,
           providerCategoryNames,
+          providerMessage,
         );
         if (provider.email) {
           results.success.push(provider.email);
@@ -130,6 +134,7 @@ export class MailService {
     organizer: Organizer,
     leadPrice?: number,
     providerCategoryNames?: string[],
+    providerMessage?: string,
   ): Promise<void> {
     if (!provider.email) {
       this.logger.warn(
@@ -139,7 +144,7 @@ export class MailService {
     }
 
     // Filtrer additionalInfo pour ne montrer que les messages des catégories du prestataire
-    const filteredAdditionalInfo = this.parseAndFilterAdditionalInfo(
+    const filteredAdditionalInfo = providerMessage || this.parseAndFilterAdditionalInfo(
       demand.additionalInfo,
       providerCategoryNames || [],
     );
@@ -202,9 +207,9 @@ export class MailService {
       // Formater les budgets par catégorie
       const categoryBudgetsData = demandBudgets
         ? demandBudgets.map((db) => ({
-            categoryName: db.category?.name || 'Catégorie',
-            budgetInterval: `${this.formatCurrency(Number(db.minAmount))} – ${this.formatCurrency(Number(db.maxAmount))}`,
-          }))
+          categoryName: db.category?.name || 'Catégorie',
+          budgetInterval: `${this.formatCurrency(Number(db.minAmount))} – ${this.formatCurrency(Number(db.maxAmount))}`,
+        }))
         : [];
 
       await this.mailerService.sendMail({
@@ -264,9 +269,9 @@ export class MailService {
     // Formater les budgets par catégorie
     const categoryBudgetsData = demandBudgets
       ? demandBudgets.map((db) => ({
-          categoryName: db.category?.name || 'Catégorie',
-          budgetInterval: `${this.formatCurrency(Number(db.minAmount))} – ${this.formatCurrency(Number(db.maxAmount))}`,
-        }))
+        categoryName: db.category?.name || 'Catégorie',
+        budgetInterval: `${this.formatCurrency(Number(db.minAmount))} – ${this.formatCurrency(Number(db.maxAmount))}`,
+      }))
       : [];
 
     try {

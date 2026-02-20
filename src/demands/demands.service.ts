@@ -98,11 +98,15 @@ export class DemandsService {
         const providerBudgetData = providerBudgets?.find(pb => pb.providerId === provider.id);
         const specificBudget = providerBudgetData?.budget;
         const specificLeadPrice = providerBudgetData?.leadPrice;
+        const specificMessage = providerBudgetData?.message;
+        const specificCategoryId = providerBudgetData?.categoryId;
         return this.demandProviderRepository.create({
           demandId: savedDemand.id,
           providerId: provider.id,
           budget: specificBudget,
           leadPrice: specificLeadPrice,
+          message: specificMessage,
+          categoryId: specificCategoryId,
         });
       });
       savedDemandProviders = await this.demandProviderRepository.save(demandProvidersEntries);
@@ -114,13 +118,15 @@ export class DemandsService {
     // Récupérer les catégories des prestataires pour les notifications (avec relations)
     const providerCategories = providers.length > 0
       ? await this.providerCategoryRepository.find({
-          where: { providerId: In(providers.map(p => p.id)) },
-          relations: ['category'],
-        })
+        where: { providerId: In(providers.map(p => p.id)) },
+        relations: ['category'],
+      })
       : [];
 
     const providerCategoriesMap = new Map<string, number[]>();
     const providerCategoryNamesMap = new Map<string, string[]>();
+    const providerMessagesMap = new Map<string, string>();
+
     for (const pc of providerCategories) {
       if (!providerCategoriesMap.has(pc.providerId)) {
         providerCategoriesMap.set(pc.providerId, []);
@@ -129,6 +135,13 @@ export class DemandsService {
       providerCategoriesMap.get(pc.providerId)!.push(pc.categoryId);
       if (pc.category?.name) {
         providerCategoryNamesMap.get(pc.providerId)!.push(pc.category.name);
+      }
+    }
+
+    // Collect specific messages from the created demand providers
+    for (const dp of savedDemandProviders) {
+      if (dp.message) {
+        providerMessagesMap.set(dp.providerId, dp.message);
       }
     }
 
@@ -149,12 +162,23 @@ export class DemandsService {
         if (providers.length > 0) {
           // Mails prestataires
           notificationPromises.push(
-            this.mailService.sendDemandNotificationToMultipleProviders(providers, savedDemand, savedBudgets, providerCategoriesMap, providerCategoryNamesMap)
+            this.mailService.sendDemandNotificationToMultipleProviders(
+              providers,
+              savedDemand,
+              savedBudgets,
+              providerCategoriesMap,
+              providerCategoryNamesMap,
+              providerMessagesMap,
+            )
               .catch(e => this.logger.error(`Providers mail failed: ${e.message}`))
           );
           // WhatsApp prestataires
           notificationPromises.push(
-            this.whatsAppService.sendDemandNotificationToMultipleProviders(providers, savedDemand)
+            this.whatsAppService.sendDemandNotificationToMultipleProviders(
+              providers,
+              savedDemand,
+              providerMessagesMap,
+            )
               .catch(e => this.logger.error(`Providers WhatsApp failed: ${e.message}`))
           );
         }
@@ -331,6 +355,7 @@ export class DemandsService {
       .leftJoinAndSelect('dp.demand', 'demand')
       .leftJoinAndSelect('demand.organizer', 'organizer')
       .leftJoinAndSelect('dp.provider', 'provider')
+      .leftJoinAndSelect('dp.category', 'category')
       .orderBy('demand.createdAt', 'DESC')
       .getMany();
   }
@@ -669,6 +694,8 @@ export class DemandsService {
 
     // Mark as approved by admin
     demandProvider.adminApprovedAt = new Date();
+    demandProvider.status = DemandStatus.MISSION_CONFIRMED;
+    demandProvider.contactUnlockedAt = new Date();
     const updated = await this.demandProviderRepository.save(demandProvider);
 
     // Charger les catégories du prestataire pour filtrer les messages
@@ -721,24 +748,24 @@ export class DemandsService {
   ): Promise<void> {
     try {
       const stats = await this.providersService.getStats(providerId);
-      
+
       // Décrementer l'ancien statut si applicable
       if (previousStatus === DemandStatus.ACCEPTED_BY_PROVIDER) {
         stats.demandsAccepted = Math.max(0, (stats.demandsAccepted || 0) - 1);
       } else if (previousStatus === DemandStatus.REFUSED_BY_PROVIDER) {
         stats.demandsRefused = Math.max(0, (stats.demandsRefused || 0) - 1);
       }
-      
+
       // Incrémenter le nouveau statut
       if (newStatus === DemandStatus.ACCEPTED_BY_PROVIDER) {
         stats.demandsAccepted = (stats.demandsAccepted || 0) + 1;
       } else if (newStatus === DemandStatus.REFUSED_BY_PROVIDER) {
         stats.demandsRefused = (stats.demandsRefused || 0) + 1;
       }
-      
+
       stats.lastUpdated = new Date();
       await this.providersService.updateStats(providerId, stats);
-      
+
       // Notify provider of stats update via WebSocket
       this.eventsGateway.emitToProvider(providerId, 'stats_updated', stats);
     } catch (error) {
